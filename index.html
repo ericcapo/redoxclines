@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mar</title>
+    <title>Interactive Map with Environmental Data</title>
 
     <!-- Leaflet CSS for the map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -11,16 +11,36 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     
     <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
         #map {
             width: 75%;
-            height: 100vh;
+            height: 100%;
             float: left;
         }
 
         #plot-container {
             width: 25%;
-            height: 100vh;
+            height: 100%;
             float: right;
+        }
+
+        #controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            z-index: 999;
+        }
+
+        .leaflet-popup-content-wrapper {
+            width: 250px;
         }
     </style>
 </head>
@@ -32,11 +52,21 @@
     <!-- Plot Container -->
     <div id="plot-container"></div>
 
-    <script>
-        // Initialize map with Leaflet.js
-        var map = L.map('map').setView([51.505, -0.09], 13); // Set initial view
+    <!-- Controls for environmental parameters -->
+    <div id="controls">
+        <h3>Environmental Parameters</h3>
+        <input type="checkbox" id="showTemperature" onchange="updatePlot()"> Temperature
+        <br>
+        <input type="checkbox" id="showSalinity" onchange="updatePlot()"> Salinity
+        <br>
+        <input type="checkbox" id="showOxygen" onchange="updatePlot()"> Oxygen
+    </div>
 
-        // Add tile layer to the map
+    <script>
+        // Initialize the map with Leaflet.js
+        var map = L.map('map').setView([51.505, -0.09], 13); // Set initial coordinates and zoom level
+
+        // Add tile layer to the map (OpenStreetMap tiles)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
@@ -49,12 +79,85 @@
 
         // Add markers to the map
         locations.forEach(function(location) {
-            L.marker([location.lat, location.lon]).addTo(map)
+            var marker = L.marker([location.lat, location.lon]).addTo(map)
                 .bindPopup(location.name)
                 .on('click', function() {
-                    alert("You clicked on " + location.name);  // Just an example, you can open the plot window here
+                    openPlotWindow(location.jsonFile);
                 });
         });
+
+        // Function to open and update the plot based on the selected JSON file
+        function openPlotWindow(jsonFile) {
+            fetch(jsonFile)
+                .then(response => response.json())
+                .then(data => {
+                    // Assuming the user can select a dataset (e.g., by date)
+                    var selectedDataset = data.datasets[0];  // For example, select the first dataset
+
+                    var depthData = selectedDataset.depth;
+                    var trace1 = {
+                        x: depthData.values,
+                        y: selectedDataset.temperature.values,  // Initially plot temperature
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'Temperature'
+                    };
+
+                    var layout = {
+                        title: `Environmental Data for ${selectedDataset.date}`,
+                        xaxis: { title: 'Depth (m)' },
+                        yaxis: { title: 'Temperature (°C)' }
+                    };
+
+                    Plotly.newPlot('plot-container', [trace1], layout);
+
+                    // Add functionality to plot other parameters like salinity, oxygen, etc.
+                    updatePlot(data, selectedDataset.date);
+                });
+        }
+
+        // Function to update the plot based on selected environmental parameters
+        function updatePlot(data, selectedDate) {
+            // Find the dataset for the selected date
+            var selectedDataset = data.datasets.find(dataset => dataset.date === selectedDate);
+            
+            // Create a list of traces based on the user's selection
+            var traces = [];
+            if (document.getElementById('showTemperature').checked) {
+                traces.push({
+                    x: selectedDataset.depth.values,
+                    y: selectedDataset.temperature.values,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Temperature'
+                });
+            }
+            if (document.getElementById('showSalinity').checked) {
+                traces.push({
+                    x: selectedDataset.depth.values,
+                    y: selectedDataset.salinity.values,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Salinity'
+                });
+            }
+            if (document.getElementById('showOxygen').checked) {
+                traces.push({
+                    x: selectedDataset.depth.values,
+                    y: selectedDataset.oxygen.values,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Oxygen'
+                });
+            }
+
+            // Update the plot with the selected parameters
+            Plotly.newPlot('plot-container', traces, {
+                title: `Environmental Data for ${selectedDataset.date}`,
+                xaxis: { title: 'Depth (m)' },
+                yaxis: { title: 'Value' }
+            });
+        }
     </script>
 
 </body>

@@ -3,64 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redoxcline2</title>
+    <title>Map Test</title>
 
     <!-- Leaflet CSS for the map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  
-    <!-- Chart.js for plotting -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-    body {margin: 0; display: flex;}
-    /* Map container */
-    #map {width: 100%;height: 100vh;}</style>
 
+    <style>
+        #map {
+            width: 75%; /* Map takes 75% of the screen */
+            height: 100vh; /* Map takes full viewport height */
+            float: left; /* Float to the left side of the page */
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Map Container -->
     <div id="map"></div>
 
+    <!-- Leaflet JS for the map -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
-        // Initialize the map with Leaflet.js
+        // Initialize the map
         var map = L.map('map').setView([58, 19], 7); // Set initial coordinates and zoom level
 
-        // Add tile layer to the map (OpenStreetMap tiles)
+        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Custom icon for the boat marker
-        var boatIcon = L.icon({
-            iconUrl: 'images/boat.png', // Path to your custom boat icon
-            iconSize: [16, 16],         // Size of the icon
-            iconAnchor: [16, 32],       // Point of the icon which will correspond to marker's location
-            popupAnchor: [0, -32]       // Point from which the popup should open
-        });
-
-     
-        // Fetch coordinates from the coordinates.json file
-        fetch('data/coordinates.json')
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(location => {
-                    // Add a marker for each location
-                    var marker = L.marker([location.lat, location.lon], { icon: boatIcon })
-                        .addTo(map)
-                        .bindPopup(`
-                            <b>${location.name}</b><br>
-                            Data File: <a href="${location.DataFile}" target="_blank">${location.DataFile}</a>
-                        `)
-                        .on('click', function() {
-                            loadDataset(location.DataFile);  // When the marker is clicked, load the dataset
-                        });
-                });
-            })
-            .catch(error => {
-                console.error('Error loading coordinates:', error);
-            });
+        console.log('Map initialized');
     </script>
 
 </body>

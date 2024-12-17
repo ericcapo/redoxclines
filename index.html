@@ -79,35 +79,72 @@
             fetch(jsonFile)
                 .then(response => response.json())
                 .then(data => {
-                    var depthData = data.depth;
+                    // Assuming that the user can select a dataset (e.g., by date)
+                    var selectedDataset = data.datasets[0];  // For example, select the first dataset
+
+                    var depthData = selectedDataset.depth;
                     var trace1 = {
-                        x: depthData.dates,
-                        y: depthData.values,
+                        x: depthData.values,
+                        y: selectedDataset.temperature.values,  // Initially plot temperature
                         type: 'scatter',
                         mode: 'lines',
-                        name: 'Water Depth'
+                        name: 'Temperature'
                     };
 
                     var layout = {
-                        title: 'Water Depth Plot',
-                        xaxis: { title: 'Date' },
-                        yaxis: { title: 'Depth (m)' }
+                        title: `Environmental Data for ${selectedDataset.date}`,
+                        xaxis: { title: 'Depth (m)' },
+                        yaxis: { title: 'Temperature (°C)' }
                     };
 
                     Plotly.newPlot('plot-container', [trace1], layout);
+
+                    // Add functionality to plot other parameters like salinity, oxygen, etc.
+                    updatePlot(data, selectedDataset.date);
                 });
         }
 
         // Function to update the plot based on selected environmental parameters
-        function updatePlot() {
-            var selectedParameters = [];
-            if (document.getElementById('showTemperature').checked) selectedParameters.push('temperature');
-            if (document.getElementById('showSalinity').checked) selectedParameters.push('salinity');
-            if (document.getElementById('showOxygen').checked) selectedParameters.push('oxygen');
+        function updatePlot(data, selectedDate) {
+            // Find the dataset for the selected date
+            var selectedDataset = data.datasets.find(dataset => dataset.date === selectedDate);
             
-            // Update the plot with selected parameters
-            // You will need to modify this to fetch the data and update traces accordingly
-            console.log("Selected Parameters:", selectedParameters);
+            // Create a list of traces based on the user's selection
+            var traces = [];
+            if (document.getElementById('showTemperature').checked) {
+                traces.push({
+                    x: selectedDataset.depth.values,
+                    y: selectedDataset.temperature.values,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Temperature'
+                });
+            }
+            if (document.getElementById('showSalinity').checked) {
+                traces.push({
+                    x: selectedDataset.depth.values,
+                    y: selectedDataset.salinity.values,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Salinity'
+                });
+            }
+            if (document.getElementById('showOxygen').checked) {
+                traces.push({
+                    x: selectedDataset.depth.values,
+                    y: selectedDataset.oxygen.values,
+                    type: 'scatter',
+                    mode: 'lines',
+                    name: 'Oxygen'
+                });
+            }
+
+            // Update the plot with the selected parameters
+            Plotly.newPlot('plot-container', traces, {
+                title: `Environmental Data for ${selectedDataset.date}`,
+                xaxis: { title: 'Depth (m)' },
+                yaxis: { title: 'Value' }
+            });
         }
     </script>
 

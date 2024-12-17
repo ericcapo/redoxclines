@@ -33,6 +33,49 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
+
+        // Custom icon for the boat marker
+        var boatIcon = L.icon({
+            iconUrl: 'images/boat.png', // Path to your custom boat icon
+            iconSize: [32, 32],         // Size of the icon
+            iconAnchor: [16, 32],       // Point of the icon which will correspond to marker's location
+            popupAnchor: [0, -32]       // Point from which the popup should open
+        });
+
+        // Fetch coordinates from the coordinates.json file
+        fetch('coordinates.json')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(location => {
+                    // Add a marker for each location
+                    var marker = L.marker([location.lat, location.lon], { icon: boatIcon })
+                        .addTo(map)
+                        .bindPopup(`
+                            <b>${location.name}</b><br>
+                            Data File: <a href="${location.DataFile}" target="_blank">${location.DataFile}</a>
+                        `)
+                        .on('click', function() {
+                            loadDataset(location.DataFile);  // When the marker is clicked, load the dataset
+                        });
+                });
+            })
+            .catch(error => {
+                console.error('Error loading coordinates:', error);
+            });
+
+        // Function to load the dataset for the selected location
+        function loadDataset(dataFile) {
+            fetch(dataFile)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Dataset loaded:', data);
+                    // You can modify this function to display or process the dataset
+                    alert(`Dataset from ${dataFile} loaded! Check the console for details.`);
+                })
+                .catch(error => {
+                    console.error('Error loading dataset:', error);
+                });
+        }
     </script>
 
 </body>

@@ -1,0 +1,23 @@
+{
+    "datasets": [
+        {
+            "date": "2023-02-01",
+            "depth": {
+                "values": [60, 62, 64, 66, 68],
+                "units": "meters"
+            },
+            "temperature": {
+                "values": [21, 20, 22, 23, 24],
+                "units": "°C"
+            },
+            "salinity": {
+                "values": [35, 34, 33.8, 33.6, 33.5],
+                "units": "PSU"
+            },
+            "oxygen": {
+                "values": [8.1, 8.2, 8, 7.9, 8.1],
+                "units": "mg/L"
+            }
+        }
+    ]
+}

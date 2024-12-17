@@ -12,47 +12,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-    body {
-            margin: 0;
-            display: flex;
-        }
+    body {margin: 0; display: flex;}
+    /* Map container (75% of the width) */
+    #map {width: 100%;height: 100vh;}}</style>
 
-        /* Map container (75% of the width) */
-        #map {
-            width: 75%;
-            height: 100vh;
-        }
-
-        /* Plot container (25% of the width) */
-        #plot-container {
-            width: 25%;
-            height: 100vh;
-            padding: 10px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            border-left: 1px solid #ccc;
-        }
-
-        /* Style for the canvas (Chart.js) */
-        canvas {
-            max-width: 100%;
-            max-height: 90%;
-        }
-    </style>
 </head>
 <body>
 
     <!-- Map Container -->
     <div id="map"></div>
 
-    <!-- Plot Container -->
-    <div id="plot-container">
-        <h3>Vertical Profile</h3>
-        <canvas id="profile-plot"></canvas>
-    </div>
-    
-    <!-- Leaflet JS for the map -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
         // Initialize the map with Leaflet.js
@@ -71,45 +40,7 @@
             popupAnchor: [0, -32]       // Point from which the popup should open
         });
 
-        // Reference to the Chart.js plot
-        let chart;
-
-        // Function to plot data
-        function updatePlot(data) {
-            const labels = data.depths; // Depth values
-            const datasets = data.parameters.map(param => ({
-                label: param.name,       // Parameter name
-                data: param.values,     // Parameter values
-                borderColor: param.color || 'blue', // Line color
-                borderWidth: 2,
-                fill: false,
-                tension: 0.1
-            }));
-
-            if (chart) {
-                chart.destroy(); // Destroy the existing chart if it exists
-            }
-
-            const ctx = document.getElementById('profile-plot').getContext('2d');
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: { labels, datasets },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            title: { display: true, text: 'Value' }
-                        },
-                        y: {
-                            reverse: true, // Depth increases downward
-                            title: { display: true, text: 'Depth (m)' }
-                        }
-                    }
-                }
-            });
-        }
-        
+     
         // Fetch coordinates from the coordinates.json file
         fetch('data/coordinates.json')
             .then(response => response.json())
@@ -130,25 +61,6 @@
             .catch(error => {
                 console.error('Error loading coordinates:', error);
             });
-
-        // Function to load dataset and update the plot
-        function loadDataset(dataFile) {
-            fetch(dataFile)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Dataset loaded:', data);
-                    const dataset = data[0]; // Use the first dataset (you can allow selection of others later)
-                    updatePlot({
-                        depths: dataset.depths,
-                        parameters: dataset.parameters.map((param, i) => ({
-                            name: param.name,
-                            values: param.values,
-                            color: ['red', 'green', 'blue', 'orange'][i % 4] // Assign colors cyclically
-                        }))
-                    });
-                })
-                .catch(error => console.error('Error loading dataset:', error));
-        }
     </script>
 
 </body>

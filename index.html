@@ -43,7 +43,7 @@
         });
 
         // Fetch coordinates from the coordinates.json file
-        fetch('coordinates.json')
+        fetch('data/coordinates.json')
             .then(response => response.json())
             .then(data => {
                 data.forEach(location => {

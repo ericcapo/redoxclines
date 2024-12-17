@@ -3,17 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple3 Map</title>
+    <title>Redoxclines</title>
 
     <!-- Leaflet CSS for the map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
+  
+    <!-- Chart.js for plotting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        /* Set the size of the map */
+    body {
+            margin: 0;
+            display: flex;
+        }
+
+        /* Map container (75% of the width) */
         #map {
-            width: 75%;       /* Map takes 75% of the screen */
-            height: 100vh;    /* Map takes full viewport height */
-            float: left;      /* Float to the left side of the page */
+            width: 75%;
+            height: 100vh;
+        }
+
+        /* Plot container (25% of the width) */
+        #plot-container {
+            width: 25%;
+            height: 100vh;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            border-left: 1px solid #ccc;
+        }
+
+        /* Style for the canvas (Chart.js) */
+        canvas {
+            max-width: 100%;
+            max-height: 90%;
         }
     </style>
 </head>
@@ -22,6 +45,12 @@
     <!-- Map Container -->
     <div id="map"></div>
 
+    <!-- Plot Container -->
+    <div id="plot-container">
+        <h3>Vertical Profile</h3>
+        <canvas id="profile-plot"></canvas>
+    </div>
+    
     <!-- Leaflet JS for the map -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -37,11 +66,50 @@
         // Custom icon for the boat marker
         var boatIcon = L.icon({
             iconUrl: 'images/boat.png', // Path to your custom boat icon
-            iconSize: [32, 32],         // Size of the icon
+            iconSize: [16, 16],         // Size of the icon
             iconAnchor: [16, 32],       // Point of the icon which will correspond to marker's location
             popupAnchor: [0, -32]       // Point from which the popup should open
         });
 
+        // Reference to the Chart.js plot
+        let chart;
+
+        // Function to plot data
+        function updatePlot(data) {
+            const labels = data.depths; // Depth values
+            const datasets = data.parameters.map(param => ({
+                label: param.name,       // Parameter name
+                data: param.values,     // Parameter values
+                borderColor: param.color || 'blue', // Line color
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+            }));
+
+            if (chart) {
+                chart.destroy(); // Destroy the existing chart if it exists
+            }
+
+            const ctx = document.getElementById('profile-plot').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Value' }
+                        },
+                        y: {
+                            reverse: true, // Depth increases downward
+                            title: { display: true, text: 'Depth (m)' }
+                        }
+                    }
+                }
+            });
+        }
+        
         // Fetch coordinates from the coordinates.json file
         fetch('data/coordinates.json')
             .then(response => response.json())
@@ -63,18 +131,23 @@
                 console.error('Error loading coordinates:', error);
             });
 
-        // Function to load the dataset for the selected location
+        // Function to load dataset and update the plot
         function loadDataset(dataFile) {
             fetch(dataFile)
                 .then(response => response.json())
                 .then(data => {
                     console.log('Dataset loaded:', data);
-                    // You can modify this function to display or process the dataset
-                    alert(`Dataset from ${dataFile} loaded! Check the console for details.`);
+                    const dataset = data[0]; // Use the first dataset (you can allow selection of others later)
+                    updatePlot({
+                        depths: dataset.depths,
+                        parameters: dataset.parameters.map((param, i) => ({
+                            name: param.name,
+                            values: param.values,
+                            color: ['red', 'green', 'blue', 'orange'][i % 4] // Assign colors cyclically
+                        }))
+                    });
                 })
-                .catch(error => {
-                    console.error('Error loading dataset:', error);
-                });
+                .catch(error => console.error('Error loading dataset:', error));
         }
     </script>
 

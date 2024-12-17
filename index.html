@@ -3,37 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map Test</title>
+    <title>Interactive Map with Image Display</title>
 
     <!-- Leaflet CSS for the map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
+    
     <style>
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        /* Map container (75% of the width) */
         #map {
-            width: 75%; /* Map takes 75% of the screen */
-            height: 100vh; /* Map takes full viewport height */
-            float: left; /* Float to the left side of the page */
+            width: 75%;
+            height: 100%;
+        }
+        /* Image container (25% of the width) */
+        #image-container {
+            width: 25%;
+            height: 100%;
+            overflow-y: auto; /* Allow scrolling if images exceed container height */
+            padding: 10px;
+            background-color: #f7f7f7;
+            border-left: 1px solid #ccc;
+        }
+        #image-container img {
+            width: 100%;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-
+    <!-- Map Container -->
     <div id="map"></div>
+    
+    <!-- Image Display Container -->
+    <div id="image-container">
+        <p>Click on a location to see related images.</p>
+    </div>
 
-    <!-- Leaflet JS for the map -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
-        // Initialize the map
-        var map = L.map('map').setView([58, 19], 7); // Set initial coordinates and zoom level
+        // Initialize the map with Leaflet.js
+        var map = L.map('map').setView([57, 18], 7); // Set initial coordinates and zoom level
 
-        // Add OpenStreetMap tile layer
+        // Add tile layer to the map (OpenStreetMap tiles)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        console.log('Map initialized');
-    </script>
+        // Custom icon for the boat marker
+        var boatIcon = L.icon({
+            iconUrl: 'images/boat.png', // Path to your custom boat icon
+            iconSize: [32, 32],         // Size of the icon
+            iconAnchor: [16, 32],       // Point of the icon which will correspond to marker's location
+            popupAnchor: [0, -32]       // Point from which the popup should open
+        });
 
+        // Example coordinates with image references
+        const locations = [
+            {
+                name: "Gotland Deep",
+                lat: 57.316667,
+                lon: 20.050000,
+                images: ["data/a1.png", "data/a2.png"]
+            },
+            {
+                name: "Landsort Deep",
+                lat: 58.016667,
+                lon: 17.966667,
+                images: ["data/b1.png", "data/b2.png"]
+            }
+        ];
+
+        // Add markers for each location
+        locations.forEach(location => {
+            L.marker([location.lat, location.lon], { icon: boatIcon })
+                .addTo(map)
+                .bindPopup(`<b>${location.name}</b>`)
+                .on('click', function () {
+                    displayImages(location.images); // Display images for the clicked location
+                });
+        });
+
+        // Function to display images in the right container
+        function displayImages(images) {
+            const container = document.getElementById('image-container');
+            container.innerHTML = ''; // Clear previous content
+            images.forEach(image => {
+                const img = document.createElement('img');
+                img.src = image;
+                img.alt = "Location Image";
+                container.appendChild(img);
+            });
+        }
+    </script>
 </body>
 </html>

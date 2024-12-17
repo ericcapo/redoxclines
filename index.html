@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map with Environmental Data</title>
+
+    <!-- Leaflet CSS for the map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Plotly JS for the plot -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    
+    <style>
+        #map {
+            width: 75%;
+            height: 100vh;
+            float: left;
+        }
+
+        #plot-container {
+            width: 25%;
+            height: 100vh;
+            float: right;
+        }
+
+        #controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Plot Container -->
+    <div id="plot-container"></div>
+
+    <!-- Controls for environmental parameters -->
+    <div id="controls">
+        <h3>Environmental Parameters</h3>
+        <input type="checkbox" id="showTemperature" onchange="updatePlot()"> Temperature
+        <br>
+        <input type="checkbox" id="showSalinity" onchange="updatePlot()"> Salinity
+        <br>
+        <input type="checkbox" id="showOxygen" onchange="updatePlot()"> Oxygen
+    </div>
+
+    <script>
+        // Initialize map with Leaflet.js
+        var map = L.map('map').setView([51.505, -0.09], 13); // Set your initial view
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Predefined locations with coordinates and associated JSON file
+        var locations = [
+            { lat: 51.505, lon: -0.09, name: "Location 1", jsonFile: "data/location1.json" },
+            { lat: 51.515, lon: -0.1, name: "Location 2", jsonFile: "data/location2.json" }
+        ];
+
+        // Add markers to the map
+        locations.forEach(function(location) {
+            L.marker([location.lat, location.lon]).addTo(map)
+                .bindPopup(location.name)
+                .on('click', function() {
+                    openPlotWindow(location.jsonFile);
+                });
+        });
+
+        // Function to open and update the plot based on the selected JSON file
+        function openPlotWindow(jsonFile) {
+            fetch(jsonFile)
+                .then(response => response.json())
+                .then(data => {
+                    var depthData = data.depth;
+                    var trace1 = {
+                        x: depthData.dates,
+                        y: depthData.values,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'Water Depth'
+                    };
+
+                    var layout = {
+                        title: 'Water Depth Plot',
+                        xaxis: { title: 'Date' },
+                        yaxis: { title: 'Depth (m)' }
+                    };
+
+                    Plotly.newPlot('plot-container', [trace1], layout);
+                });
+        }
+
+        // Function to update the plot based on selected environmental parameters
+        function updatePlot() {
+            var selectedParameters = [];
+            if (document.getElementById('showTemperature').checked) selectedParameters.push('temperature');
+            if (document.getElementById('showSalinity').checked) selectedParameters.push('salinity');
+            if (document.getElementById('showOxygen').checked) selectedParameters.push('oxygen');
+            
+            // Update the plot with selected parameters
+            // You will need to modify this to fetch the data and update traces accordingly
+            console.log("Selected Parameters:", selectedParameters);
+        }
+    </script>
+
+</body>
+</html>

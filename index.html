@@ -3,44 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Map with Environmental Data</title>
+    <title>Simple Map</title>
 
     <!-- Leaflet CSS for the map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <!-- Plotly JS for the plot -->
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    
+
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-
+        /* Set the size of the map */
         #map {
-            width: 75%;
-            height: 100%;
-            float: left;
-        }
-
-        #plot-container {
-            width: 25%;
-            height: 100%;
-            float: right;
-        }
-
-        #controls {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 10px;
-            border: 1px solid #ddd;
-            z-index: 999;
-        }
-
-        .leaflet-popup-content-wrapper {
-            width: 250px;
+            width: 75%;       /* Map takes 75% of the screen */
+            height: 100vh;    /* Map takes full viewport height */
+            float: left;      /* Float to the left side of the page */
         }
     </style>
 </head>
@@ -49,18 +22,8 @@
     <!-- Map Container -->
     <div id="map"></div>
 
-    <!-- Plot Container -->
-    <div id="plot-container"></div>
-
-    <!-- Controls for environmental parameters -->
-    <div id="controls">
-        <h3>Environmental Parameters</h3>
-        <input type="checkbox" id="showTemperature" onchange="updatePlot()"> Temperature
-        <br>
-        <input type="checkbox" id="showSalinity" onchange="updatePlot()"> Salinity
-        <br>
-        <input type="checkbox" id="showOxygen" onchange="updatePlot()"> Oxygen
-    </div>
+    <!-- Leaflet JS for the map -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
         // Initialize the map with Leaflet.js
@@ -70,94 +33,6 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
-        // Predefined locations with coordinates and associated JSON file
-        var locations = [
-            { lat: 51.505, lon: -0.09, name: "Location 1", jsonFile: "data/location1.json" },
-            { lat: 51.515, lon: -0.1, name: "Location 2", jsonFile: "data/location2.json" }
-        ];
-
-        // Add markers to the map
-        locations.forEach(function(location) {
-            var marker = L.marker([location.lat, location.lon]).addTo(map)
-                .bindPopup(location.name)
-                .on('click', function() {
-                    openPlotWindow(location.jsonFile);
-                });
-        });
-
-        // Function to open and update the plot based on the selected JSON file
-        function openPlotWindow(jsonFile) {
-            fetch(jsonFile)
-                .then(response => response.json())
-                .then(data => {
-                    // Assuming the user can select a dataset (e.g., by date)
-                    var selectedDataset = data.datasets[0];  // For example, select the first dataset
-
-                    var depthData = selectedDataset.depth;
-                    var trace1 = {
-                        x: depthData.values,
-                        y: selectedDataset.temperature.values,  // Initially plot temperature
-                        type: 'scatter',
-                        mode: 'lines',
-                        name: 'Temperature'
-                    };
-
-                    var layout = {
-                        title: `Environmental Data for ${selectedDataset.date}`,
-                        xaxis: { title: 'Depth (m)' },
-                        yaxis: { title: 'Temperature (°C)' }
-                    };
-
-                    Plotly.newPlot('plot-container', [trace1], layout);
-
-                    // Add functionality to plot other parameters like salinity, oxygen, etc.
-                    updatePlot(data, selectedDataset.date);
-                });
-        }
-
-        // Function to update the plot based on selected environmental parameters
-        function updatePlot(data, selectedDate) {
-            // Find the dataset for the selected date
-            var selectedDataset = data.datasets.find(dataset => dataset.date === selectedDate);
-            
-            // Create a list of traces based on the user's selection
-            var traces = [];
-            if (document.getElementById('showTemperature').checked) {
-                traces.push({
-                    x: selectedDataset.depth.values,
-                    y: selectedDataset.temperature.values,
-                    type: 'scatter',
-                    mode: 'lines',
-                    name: 'Temperature'
-                });
-            }
-            if (document.getElementById('showSalinity').checked) {
-                traces.push({
-                    x: selectedDataset.depth.values,
-                    y: selectedDataset.salinity.values,
-                    type: 'scatter',
-                    mode: 'lines',
-                    name: 'Salinity'
-                });
-            }
-            if (document.getElementById('showOxygen').checked) {
-                traces.push({
-                    x: selectedDataset.depth.values,
-                    y: selectedDataset.oxygen.values,
-                    type: 'scatter',
-                    mode: 'lines',
-                    name: 'Oxygen'
-                });
-            }
-
-            // Update the plot with the selected parameters
-            Plotly.newPlot('plot-container', traces, {
-                title: `Environmental Data for ${selectedDataset.date}`,
-                xaxis: { title: 'Depth (m)' },
-                yaxis: { title: 'Value' }
-            });
-        }
     </script>
 
 </body>
